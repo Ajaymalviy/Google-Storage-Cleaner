@@ -1,13 +1,14 @@
 from allauth.socialaccount.models import SocialAccount, SocialApp, SocialToken
 from google.oauth2.credentials import Credentials
-from django.contrib import messages
-from .utils import retrieve_credentials_for_user
-import requests
+from google.auth.transport.requests import Request
 from django.contrib.auth import logout
+from django.contrib import messages
 from django.shortcuts import redirect
 from django.core.mail import EmailMessage
-from google.auth.transport.requests import Request
 from datetime import datetime, timezone
+from .utils import retrieve_credentials_for_user
+import requests
+
 
 # to blacklist the token when user logs out. the logout view is defined below.
 def blacklist_token(token):
@@ -15,12 +16,10 @@ def blacklist_token(token):
 	url = 'https://oauth2.googleapis.com/revoke'
 	payload = {'token': token}
 	headers = {'content-type': 'application/x-www-form-urlencoded'}
-
 	response = requests.post(url, data=payload, headers=headers)
 	
 	if response.status_code == 200:
 		return "Token blacklist successful"
-	
 	else:
 		return "Something went wrong"
 
@@ -49,19 +48,15 @@ def refresh_google_token(user_id):
             # Refresh token only if expired
             if creds.expiry < datetime.now(timezone.utc):
                 creds.refresh(Request())
-
                 # Update token in SocialToken model
                 social_account = SocialAccount.objects.get(user_id=user_id, provider='google')
                 social_token = SocialToken.objects.get(account=social_account)
-
                 social_token.token = creds.token
                 social_token.expires_at = creds.expiry
                 social_token.save()
-
                 return creds.token
     except Exception as e:
         print('Exception during token refresh:', e)
-
     return None
 
 
@@ -81,7 +76,6 @@ def logout_view(request):
 
 	except Exception as e:
 		print(f"exception{e}")
-
 	return redirect('index')
 
 

@@ -80,9 +80,6 @@ def delete_emails_view(request):
         messages.error(request, f"An error occurred while processing your request. {e}")
         return render(request, 'email_delete_form.html')
 
-
-#####recover deleted emails############
-
 # works when recover emails button is triggered
 def recover_emails_from_trash_view(request):
     if not request.user.is_authenticated:

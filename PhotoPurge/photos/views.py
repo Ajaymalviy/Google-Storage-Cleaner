@@ -1,35 +1,31 @@
-from django.contrib import messages
 from django.shortcuts import render, redirect
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaIoBaseDownload, MediaFileUpload
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
+from django.contrib.auth import logout
+from django.contrib import messages
 from allauth.socialaccount.models import SocialAccount, SocialToken
 from google.oauth2.credentials import Credentials
+from google.auth.transport.requests import Request
 from gmailapp.auth import check_token_validity
-from django.contrib.auth import logout
+from .tasks import migrate_all_photos_task, migrate_selected_photos_task
+from .utils import get_photos_service, download_photo, upload_photo, get_photos
 import httplib2
 import requests
 import io
 import json
-from django.contrib.auth.models import User
-from .tasks import migrate_all_photos_task, migrate_selected_photos_task
-from .utils import get_photos_service, download_photo, upload_photo, get_photos
-
 
 
 def google_auth_redirect(request):
     return redirect('socialaccount_login', provider='google')
 
-
 API_NAME = 'photoslibrary'
 API_VERSION = 'v1'
 
-
 def retrieve_credentials_for_user(user):
     try:
-
-        social_account = SocialAccount.objects.get(user=user, provider="google")
-        
+        social_account = SocialAccount.objects.get(user=user, provider="google")   
         social_token = SocialToken.objects.get(account=social_account)
         print('social token are ',social_token)
         SCOPES = ['https://www.googleapis.com/auth/photoslibrary']
@@ -42,11 +38,8 @@ def retrieve_credentials_for_user(user):
             client_secret="your-client-secret",
         )
 
-
         if creds.expired and creds.refresh_token:
             creds.refresh(Request())
-
-
 
         if not creds.has_scopes(SCOPES):
             creds = Credentials(
@@ -113,8 +106,6 @@ def migrate_photos(request):
             src_creds = {'token':creds.token, 'refresh_token':creds.refresh_token}
             if destination_credentials:
                 task = migrate_all_photos_task.delay(request.user.id, request.user.email, src_creds, destination_credentials)
-
-
                 messages.success(request, f"Migrating all photos. Task ID: {task.id}")
                 return redirect('migrate_photos')
 
@@ -133,14 +124,8 @@ def migrate_photos(request):
                         'token_uri':creds.token_uri, 'client_id':creds.client_id,
                         'client_secret':creds.client_secret, 'scopes':creds.scopes
                                         }
-                
-
                 print('src creds', src_creds)
-
-
-
                 task = migrate_selected_photos_task.delay(src_creds, destination_credentials, selected_photo_ids)
-
                 print('on botom of task')
                 print(f"task{task}")
                 messages.success(request, f"Migrating selected photos. Task ID: {task.id}")

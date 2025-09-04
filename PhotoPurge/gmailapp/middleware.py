@@ -1,7 +1,11 @@
 from django.utils.timezone import now, make_aware
+from django.core.mail import EmailMessage
 from datetime import datetime, timezone, timedelta
 from .utils import retrieve_credentials_for_user
-from django.core.mail import EmailMessage
+import requests
+from google.auth.transport.requests import Request
+from allauth.socialaccount.models import SocialAccount, SocialToken
+
 class TokenRefreshMiddleware:
     """
     Middleware to ensure Google OAuth token is refreshed if it's about to expire.
