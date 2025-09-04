@@ -1,8 +1,6 @@
 from django.urls import path
-
-from . import views  # Import your views from the current app
 from photos import views as photos_views 
-
+from . import views  # Import your views from the current app
 from . import views, auth  
 
 urlpatterns = [
