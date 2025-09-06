@@ -80,10 +80,13 @@ def migrate_photos(request):
         return redirect('/accounts/google/login/?process=login')
     creds = retrieve_credentials_for_user(request.user.id)
     src_creds = {
-                        'token':creds.token, 'refresh_token':creds.refresh_token,
-                        'token_uri':creds.token_uri, 'client_id':creds.client_id,
-                        'client_secret':creds.client_secret, 'scopes':creds.scopes
-                                        }
+                        'token':creds.token, 
+                        'refresh_token':creds.refresh_token,
+                        'token_uri':creds.token_uri, 
+                        'client_id':creds.client_id,
+                        'client_secret':creds.client_secret, 
+                        'scopes':creds.scopes
+                }
     
     page_token = request.GET.get('page_token')
     photos, next_page_token = get_photos(src_creds, page_token)
@@ -103,7 +106,9 @@ def migrate_photos(request):
         if action == 'migrate_all':
             print('inside migrate all')
             creds = retrieve_credentials_for_user(request.user)
-            src_creds = {'token':creds.token, 'refresh_token':creds.refresh_token}
+            src_creds = {'token':creds.token, 
+                         'refresh_token':creds.refresh_token
+                        }
             if destination_credentials:
                 task = migrate_all_photos_task.delay(request.user.id, request.user.email, src_creds, destination_credentials)
                 messages.success(request, f"Migrating all photos. Task ID: {task.id}")
@@ -112,7 +117,7 @@ def migrate_photos(request):
         elif action == 'migrate_selected':
             print('inside migrate selected')
             selected_photo_ids = request.POST.getlist('selected_photos')
-            print(f'\nselectedphotoid\n {selected_photo_ids}\n')
+            print(f'\nselectedphoto-id\n {selected_photo_ids}\n')
             if destination_credentials and selected_photo_ids:
                 print('inside if')
                 print('source_credentials', source_credentials)
@@ -120,10 +125,13 @@ def migrate_photos(request):
 
                 creds = retrieve_credentials_for_user(request.user.id)
                 src_creds = {
-                        'token':creds.token, 'refresh_token':creds.refresh_token,
-                        'token_uri':creds.token_uri, 'client_id':creds.client_id,
-                        'client_secret':creds.client_secret, 'scopes':creds.scopes
-                                        }
+                        'token':creds.token, 
+                        'refresh_token':creds.refresh_token,
+                        'token_uri':creds.token_uri, 
+                        'client_id':creds.client_id,
+                        'client_secret':creds.client_secret, 
+                        'scopes':creds.scopes
+                }
                 print('src creds', src_creds)
                 task = migrate_selected_photos_task.delay(src_creds, destination_credentials, selected_photo_ids)
                 print('on botom of task')
