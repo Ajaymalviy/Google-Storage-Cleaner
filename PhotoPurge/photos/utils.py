@@ -1,12 +1,12 @@
-import requests
+from django.shortcuts import redirect
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaIoBaseUpload
-import io
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
-import json
 from django.contrib.auth.models import User
-
+import json
+import io
+import requests
 
 def get_photos_service(credentials_dict):
     print('inside get_photos_service')
@@ -31,7 +31,6 @@ def get_photos_service(credentials_dict):
         if not credentials or not credentials.valid:
             print("Invalid credentials")
             return None
-
         if credentials and credentials.expired and credentials.refresh_token:
             credentials.refresh(Request())
         print('on top of service build')
@@ -64,7 +63,7 @@ def get_photos(credentials, page_token=None):
 def download_photo(url):
     print('inside download photo')
     print('url', url)
-    if not User.is_authenticated:
+    if not requests.request.user.is_authenticated:
         return redirect('oauth')
     try:
         print('in try')
@@ -79,7 +78,7 @@ def download_photo(url):
 
 def upload_photo(service, photo_data, file_name):
     print('inside upload photo')
-    if not User.is_authenticated:
+    if not requests.request.user.is_authenticated:
         return redirect('oauth')
     try:
         print('in try')
@@ -91,7 +90,6 @@ def upload_photo(service, photo_data, file_name):
             "X-Goog-Upload-Protocol": "raw"
         }
         print('on top of response')
-
         response = requests.post(upload_url, headers=headers, data=photo_data)
         print('response', response)
         if response.status_code != 200:
@@ -102,8 +100,6 @@ def upload_photo(service, photo_data, file_name):
         print("exception is", e)
 
     try:
-        
-
         upload_token = response.text
         print('upload tokens', upload_token)
         print('photodata', photo_data)
@@ -114,7 +110,6 @@ def upload_photo(service, photo_data, file_name):
                 }
             }]
         }
-
         service.mediaItems().batchCreate(body=media_item).execute()
 
     except Exception as e:
